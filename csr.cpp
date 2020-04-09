@@ -74,9 +74,7 @@ template void tCSRLoadFromMM(const char* fileName,CSR<double>* tcsr);
 template<typename T>
 void CSR<T>::LoadFromMM(const char* fileName){
 	tCSRLoadFromMM<T>(fileName,this);
-	Dump();
 	Transpose();
-	Dump();
 }
 template void CSR<float>::LoadFromMM(const char* fileName);
 template void CSR<double>::LoadFromMM(const char* fileName);

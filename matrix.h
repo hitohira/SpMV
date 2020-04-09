@@ -30,6 +30,7 @@ public:
 	int* colind = NULL;
 	int* rowptr = NULL;
 	~CSR(){
+		printf("csr del\n");
 		if(val) free(val);
 		if(colind) free(colind);
 		if(rowptr) free(rowptr);
@@ -49,10 +50,11 @@ public:
 	T* val = NULL;
 	int* colind = NULL;
 	~ELL(){
+		printf("ell del\n");
 		if(val) free(val);
 		if(colind) free(colind);
 	}
-	void TransformFromCSR(CSR<T> csr);
+	void TransformFromCSR(const CSR<T>& csr);
 	void Dump();
 	void MulOnCPU(Vec<T> x, Vec<T> y);
 	void MulOnGPU(Vec<T> x, Vec<T> y);

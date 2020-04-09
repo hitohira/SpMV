@@ -4,7 +4,7 @@
 #include <omp.h>
 
 template<typename T>
-void ELL<T>::TransformFromCSR(CSR<T> csr){
+void ELL<T>::TransformFromCSR(const CSR<T>& csr){
 	m = csr.m;
 	n = csr.n;
 	int mx_col = 0;
@@ -34,8 +34,8 @@ void ELL<T>::TransformFromCSR(CSR<T> csr){
 		}
 	}
 }
-template void ELL<float>::TransformFromCSR(CSR<float> csr);
-template void ELL<double>::TransformFromCSR(CSR<double> csr);
+template void ELL<float>::TransformFromCSR(const CSR<float>& csr);
+template void ELL<double>::TransformFromCSR(const CSR<double>& csr);
 
 template<typename T>
 void ELL<T>::Dump(){
