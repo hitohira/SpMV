@@ -60,7 +60,7 @@ template void ELL<float>::Dump();
 template void ELL<double>::Dump();
 
 template<typename T>
-void ELL<T>::MulOnCPU(Vec<T> x, Vec<T> y){
+void ELL<T>::MulOnCPU(Vec<T>& x, Vec<T>& y){
 	int i,j;
 	#pragma omp parallel for private(j) collapse(2)
 	for(i = 0; i < m; i++){
@@ -70,13 +70,13 @@ void ELL<T>::MulOnCPU(Vec<T> x, Vec<T> y){
 		}
 	}
 }
-template void ELL<float>::MulOnCPU(Vec<float> x, Vec<float> y);
-template void ELL<double>::MulOnCPU(Vec<double> x, Vec<double> y);
+template void ELL<float>::MulOnCPU(Vec<float>& x, Vec<float>& y);
+template void ELL<double>::MulOnCPU(Vec<double>& x, Vec<double>& y);
 
 template<typename T>
-void ELL<T>::MulOnGPU(Vec<T> x, Vec<T> y){
+void ELL<T>::MulOnGPU(Vec<T>& x, Vec<T>& y){
 	// TODO
 
 }
-template void ELL<float>::MulOnGPU(Vec<float> x, Vec<float> y);
-template void ELL<double>::MulOnGPU(Vec<double> x, Vec<double> y);
+template void ELL<float>::MulOnGPU(Vec<float>& x, Vec<float>& y);
+template void ELL<double>::MulOnGPU(Vec<double>& x, Vec<double>& y);

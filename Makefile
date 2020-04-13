@@ -1,17 +1,17 @@
 MAIN = main
 OBJS = main.o csr.o ell.o
 
-CC = g++
-CFLAGS = -fpermissive -O2 
+CXX = g++
+CXXFLAGS = -fpermissive -O2 -std=c++11
 
 all: $(MAIN) 
 
 $(MAIN): $(OBJS)
-	$(CC) -o $@ $^
+	$(CXX) -o $@ $^
 
 .SUFFIXES: .c .o
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -c $<
 
 .PHONY: clean
 clean:

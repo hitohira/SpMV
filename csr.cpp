@@ -134,7 +134,7 @@ template void CSR<float>::Dump();
 template void CSR<double>::Dump();
 
 template<typename T>
-void CSR<T>::MulOnCPU(Vec<T> x, Vec<T> y){
+void CSR<T>::MulOnCPU(Vec<T>& x, Vec<T>& y){
 	#pragma omp parallel for private(j) 
 	for(int i = 0; i < m; i++){
 		for(int j = rowptr[i]; j < rowptr[i+1]; j++){
@@ -142,6 +142,6 @@ void CSR<T>::MulOnCPU(Vec<T> x, Vec<T> y){
 		}
 	}	
 }
-template void CSR<float>::MulOnCPU(Vec<float> x, Vec<float> y);
-template void CSR<double>::MulOnCPU(Vec<double> x, Vec<double> y);
+template void CSR<float>::MulOnCPU(Vec<float>& x, Vec<float>& y);
+template void CSR<double>::MulOnCPU(Vec<double>& x, Vec<double>& y);
 
