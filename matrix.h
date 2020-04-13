@@ -76,6 +76,7 @@ public:
 	void Transpose();
 	void Dump();
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
+	void MulOnGPU(Vec<T>& x, Vec<T>& y);
 };
 
 template<typename T>
