@@ -73,10 +73,3 @@ void ELL<T>::MulOnCPU(Vec<T>& x, Vec<T>& y){
 template void ELL<float>::MulOnCPU(Vec<float>& x, Vec<float>& y);
 template void ELL<double>::MulOnCPU(Vec<double>& x, Vec<double>& y);
 
-template<typename T>
-void ELL<T>::MulOnGPU(Vec<T>& x, Vec<T>& y){
-	// TODO
-
-}
-template void ELL<float>::MulOnGPU(Vec<float>& x, Vec<float>& y);
-template void ELL<double>::MulOnGPU(Vec<double>& x, Vec<double>& y);

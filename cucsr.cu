@@ -1,6 +1,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <stdio.h>
+#include "matrix.h"
 
 const int warpSize = 32;
 const int NUM_VECTORS_PER_BLOCK = 1024;
@@ -23,8 +24,8 @@ __device__ int warpGetRowIndex(const int V,int* row_counter){
 	}
 	return __shfl(row,0,warpSize) + vecIdInWarp;
 }
-__global__ void spmv_kernel_d(const int V,int* row_counter,const int R,const int* row_offset,
-                            const int* col,const double* val, const double* b,double* c){
+__global__ void spmvKernelS(const int V,int* row_counter,const int R,const int* row_offset,
+                            const int* col,const float* val, const float* b,float* c){
 	int vecLaneId = threadIdx.x % V;
 	int vectorId = threadIdx.x / V;
 	__shared__ volatile int shrdMem[NUM_VECTORS_PER_BLOCK][2];
@@ -36,7 +37,7 @@ __global__ void spmv_kernel_d(const int V,int* row_counter,const int R,const int
 		}
 		int row_s = shrdMem[vectorId][0];
 		int row_e = shrdMem[vectorId][1];
-		double dot_prod = 0.0;
+		float dot_prod = 0.0;
 		if(V == warpSize){
 			int i = row_s - (row_s & (V-1)) + vecLaneId;
 			if(i >= row_s && i < row_e){
@@ -60,6 +61,58 @@ __global__ void spmv_kernel_d(const int V,int* row_counter,const int R,const int
 		row = warpGetRowIndex(V,row_counter);
 	}
 }
+__global__ void spmvKernelD(const int V,int* row_counter,const int R,const int* row_offset,
+                            const int* col,const double* val, const double* b,double* c){
+}
+
+template<typename T>
+void wrapKernel(const int B,const int T,const int V,int* row_counter,const int R,const int* row_offset,
+                const int* col,const T* val, const T* b,T* c){
+	return;
+}
+
+void wrapKernel(const int B, const int T,const int V,int* row_counter,const int R,const int* row_offset,
+                const int* col,const float* val, const float* b,float* c){
+	spmvKernelS<<<B,T>>>(V,row_counter,R,row_offset,col,val,b,c);
+}
+void wrapKernel(const int B,const int T,const int V,int* row_counter,const int R,const int* row_offset,
+                const int* col,const double* val, const double* b,double* c){
+	spmvKernelD<<<B,T>>>(V,row_counter,R,row_offset,col,val,b,c);
+}
+
+
+template<typename T>
+void CSR<T>::copyMatToDevice(T** d_val,int** d_rowptr,int** d_colind){
+	int nnz = rowptr[m];
+	
+	if(*d_val) cudaFree(*d_val);
+	if(*d_rowptr) cudaFree(*d_rowptr);
+	if(*d_colind) cudaFree(*d_colind);
+	cudaMalloc((void**)d_val,nnz*sizeof(T));
+	cudaMalloc((void**)d_colind,nnz*sizeof(int));
+	cudaMalloc((void**)d_rowptr,(m+1)*sizeof(int));
+
+	cudaMemcpy(*d_val,val,nnz*sizeof(T),cudaMemcpyHostToDevice);
+	cudaMemcpy(*d_col,colind,nnz*sizeof(int),cudaMemcpyHostToDevice);
+	cudaMemcpy(*d_row,rowptr,(m+1)*sizeof(int),cudaMemcpyHostToDevice)
+}
+template void CSR<float>::copyMatToDevice(float** d_val,int** d_rowptr,int** d_colind);
+template void CSR<double>::copyMatToDevice(double** d_val,int** d_rowptr,int** d_colind);
+
+template<typename T>
+void Vec<T>::allocVectorToDevice(T** d_v){
+	if(*d_v) cudaFree(*d_v);
+	cudaMalloc((void**)d_v,m*sizeof(T));
+}
+void Vec<float>::allocVectorToDevice(float** d_v);
+void Vec<double>::allocVectorToDevice(double** d_v);
+
+template<typename T>
+void Vec<T>::setVectorValueToDevice(T* d_v){
+	cudaMemcpy(d_v,val,m*sizeof(T),cudaMemcpyHostToDevice);
+}
+void Vec<float>::setVectorValueToDevice(float* d_v);
+void Vec<double>::setVectorValueToDevice(double* d_v);
 
 template<typename T>
 int gpuLightSpMV(CSR<T>& csr,Vec<T>& x,Vec<T>& y){
@@ -71,16 +124,15 @@ int gpuLightSpMV(CSR<T>& csr,Vec<T>& x,Vec<T>& y){
 	int n = csr.n;
 	int nnz = csr.rowptr[m];
 
-	T* csr_val;
-	int* csr_row;
-	int* csr_col;
-	T* b_val;
-	T* c_val;
-	cudaMalloc((void**)&csr_val,nnz*sizeof(T));
-	cudaMalloc((void**)&csr_col,nnz*sizeof(int));
-	cudaMalloc((void**)&csr_row,(m+1)*sizeof(int));
-	cudaMalloc((void**)&b_val,m*sizeof(T));
-	cudaMalloc((void**)&c_val,n*sizeof(T));
+	T* csr_val = NULL;
+	int* csr_row = NULL;
+	int* csr_col = NULL;
+	T* b_val = NULL;
+	T* c_val = NULL;
+	csr.copyMatToDevice(&csr_val,&csr_row,&csr_col);
+	x.allocVectorToDevice(&b_val);
+	y.allocVectorToDevice(&c_val);
+	x.setVectorValueToDevice(b_val);
 
 	int* row_counter;
 	cudaMalloc((void**)&row_counter,sizeof(int));
@@ -94,13 +146,6 @@ int gpuLightSpMV(CSR<T>& csr,Vec<T>& x,Vec<T>& y){
 	
 	printf("B=%d T=%d ave=%d\n",B,T,avgRowLength);
 
-	cudaMemcpy(b_val,x.val,x.m*sizeof(T),cudaMemcpyHostToDevice);
-
-	cudaMemcpy(csr_val,csr.val,nnz*sizeof(T),cudaMemcpyHostToDevice);
-	cudaMemcpy(csr_col,csr.colind,nnz*sizeof(int),cudaMemcpyHostToDevice);
-	cudaMemcpy(csr_row,csr.rowptr,(m+1)*sizeof(int),cudaMemcpyHostToDevice)
-
-
 	// Kernel
 /*
 	cudaEvent_t e_s,e_e;
@@ -109,16 +154,16 @@ int gpuLightSpMV(CSR<T>& csr,Vec<T>& x,Vec<T>& y){
 	cudaEventRecord(e_s);
 */
 	if(avgRowLength <= 2){
-		spmv_kernel<<<B,T>>>(2,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,2,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
 	}
 	else if(avgRowLength <= 4){
-		spmv_kernel<<<B,T>>>(4,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,4,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
 	}
 	else if(avgRowLength <= 64){
-		spmv_kernel<<<B,T>>>(8,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,8,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
 	}
 	else{
-		spmv_kernel<<<B,T>>>(32,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,32,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
 	}
 /*
 	cudaEventRecord(e_e);

@@ -56,6 +56,8 @@ public:
 		}
 		return true;
 	}
+	void allocVectorToDevice(T** d_v);
+	void setVectorValueToDevice(T* d_v);
 };
 
 template<typename T>
@@ -76,7 +78,9 @@ public:
 	void Transpose();
 	void Dump();
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
+	void MklMul(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
+	void copyMatToDevice(T** d_val,int** d_rowptr,int** d_colind);
 };
 
 template<typename T>
@@ -96,7 +100,9 @@ public:
 	void Dump();
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
+	void copyMatToDevice(T** d_val,int** d_colind);
 };
+
 
 
 

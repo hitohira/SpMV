@@ -135,9 +135,10 @@ template void CSR<double>::Dump();
 
 template<typename T>
 void CSR<T>::MulOnCPU(Vec<T>& x, Vec<T>& y){
+	int i,j;
 	#pragma omp parallel for private(j) 
-	for(int i = 0; i < m; i++){
-		for(int j = rowptr[i]; j < rowptr[i+1]; j++){
+	for(i = 0; i < m; i++){
+		for(j = rowptr[i]; j < rowptr[i+1]; j++){
 			y.val[i] += val[j] * x.val[colind[j]];
 		}
 	}	
