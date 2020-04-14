@@ -27,15 +27,15 @@ void ELL<T>::copyMatToDevice(T** d_val,int** d_colind){
 	cudaMalloc((void**)d_val,m*k*sizeof(T));
 	cudaMalloc((void**)d_colind,m*k*sizeof(int));
 
-	cudaMemcpy(*d_val,val,m*k*sizeof(T),cidaMemcpyHostToDevice);
-	cudaMemcpy(*d_colind,colind,m*k*sizeof(T),cidaMemcpyHostToDevice);
+	cudaMemcpy(*d_val,val,m*k*sizeof(T),cudaMemcpyHostToDevice);
+	cudaMemcpy(*d_colind,colind,m*k*sizeof(T),cudaMemcpyHostToDevice);
 }
 
-template<typename T>
-void ELL<T>::MulOnGPU(Vec<T>& x, Vec<T>& y){
+template<typename X>
+void ELL<X>::MulOnGPU(Vec<X>& x, Vec<X>& y){
 	int T = 1024;
 	int B = m / T + 1;
 	
 }
-void ELL<float>::MulOnGPU(Vec<float>& x, Vec<float>& y);
-void ELL<double>::MulOnGPU(Vec<double>& x, Vec<double>& y);
+template void ELL<float>::MulOnGPU(Vec<float>& x, Vec<float>& y);
+template void ELL<double>::MulOnGPU(Vec<double>& x, Vec<double>& y);

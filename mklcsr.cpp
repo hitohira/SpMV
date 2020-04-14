@@ -9,9 +9,10 @@ void CSR<T>::MklMul(Vec<T>& x, Vec<T>& y){
 	fprintf(stderr,"MklMul : Wrong Type of CSR\n");
 	return;
 }
-template void CSR<float>::MklMul(Vec<float>& x, Vec<float>& y){
+template<> void CSR<float>::MklMul(Vec<float>& x, Vec<float>& y){
+	char ts = 'N';
 	mkl_cspblas_scsrgemv (
-		'N' , 
+		&ts , 
 		&m , 
 		val , 
 		rowptr , 
@@ -19,9 +20,10 @@ template void CSR<float>::MklMul(Vec<float>& x, Vec<float>& y){
 		x.val , 
 		y.val );	
 }
-template void CSR<double>::MklMul(Vec<double>& x, Vec<double>& y){
+template<> void CSR<double>::MklMul(Vec<double>& x, Vec<double>& y){
+	char ts = 'N';
 	mkl_cspblas_dcsrgemv (
-		'N' , 
+		&ts , 
 		&m , 
 		val , 
 		rowptr , 

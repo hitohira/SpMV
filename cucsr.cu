@@ -65,17 +65,17 @@ __global__ void spmvKernelD(const int V,int* row_counter,const int R,const int* 
                             const int* col,const double* val, const double* b,double* c){
 }
 
-template<typename T>
+template<typename X>
 void wrapKernel(const int B,const int T,const int V,int* row_counter,const int R,const int* row_offset,
-                const int* col,const T* val, const T* b,T* c){
+                const int* col,const X* val, const X* b,X* c){
 	return;
 }
 
-void wrapKernel(const int B, const int T,const int V,int* row_counter,const int R,const int* row_offset,
+template<> void wrapKernel(const int B, const int T,const int V,int* row_counter,const int R,const int* row_offset,
                 const int* col,const float* val, const float* b,float* c){
 	spmvKernelS<<<B,T>>>(V,row_counter,R,row_offset,col,val,b,c);
 }
-void wrapKernel(const int B,const int T,const int V,int* row_counter,const int R,const int* row_offset,
+template<> void wrapKernel(const int B,const int T,const int V,int* row_counter,const int R,const int* row_offset,
                 const int* col,const double* val, const double* b,double* c){
 	spmvKernelD<<<B,T>>>(V,row_counter,R,row_offset,col,val,b,c);
 }
@@ -93,8 +93,8 @@ void CSR<T>::copyMatToDevice(T** d_val,int** d_rowptr,int** d_colind){
 	cudaMalloc((void**)d_rowptr,(m+1)*sizeof(int));
 
 	cudaMemcpy(*d_val,val,nnz*sizeof(T),cudaMemcpyHostToDevice);
-	cudaMemcpy(*d_col,colind,nnz*sizeof(int),cudaMemcpyHostToDevice);
-	cudaMemcpy(*d_row,rowptr,(m+1)*sizeof(int),cudaMemcpyHostToDevice)
+	cudaMemcpy(*d_colind,colind,nnz*sizeof(int),cudaMemcpyHostToDevice);
+	cudaMemcpy(*d_rowptr,rowptr,(m+1)*sizeof(int),cudaMemcpyHostToDevice);
 }
 template void CSR<float>::copyMatToDevice(float** d_val,int** d_rowptr,int** d_colind);
 template void CSR<double>::copyMatToDevice(double** d_val,int** d_rowptr,int** d_colind);
@@ -104,19 +104,19 @@ void Vec<T>::allocVectorToDevice(T** d_v){
 	if(*d_v) cudaFree(*d_v);
 	cudaMalloc((void**)d_v,m*sizeof(T));
 }
-void Vec<float>::allocVectorToDevice(float** d_v);
-void Vec<double>::allocVectorToDevice(double** d_v);
+template void Vec<float>::allocVectorToDevice(float** d_v);
+template void Vec<double>::allocVectorToDevice(double** d_v);
 
 template<typename T>
 void Vec<T>::setVectorValueToDevice(T* d_v){
 	cudaMemcpy(d_v,val,m*sizeof(T),cudaMemcpyHostToDevice);
 }
-void Vec<float>::setVectorValueToDevice(float* d_v);
-void Vec<double>::setVectorValueToDevice(double* d_v);
+template void Vec<float>::setVectorValueToDevice(float* d_v);
+template void Vec<double>::setVectorValueToDevice(double* d_v);
 
-template<typename T>
-int gpuLightSpMV(CSR<T>& csr,Vec<T>& x,Vec<T>& y){
-	if(csr.s != x.m || csr.n != y.m){
+template<typename X>
+int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
+	if(csr.n != x.m || csr.m != y.m){
 		fprintf(stderr,"wrong size of data\n");
 		return -1;
 	}
@@ -124,11 +124,11 @@ int gpuLightSpMV(CSR<T>& csr,Vec<T>& x,Vec<T>& y){
 	int n = csr.n;
 	int nnz = csr.rowptr[m];
 
-	T* csr_val = NULL;
+	X* csr_val = NULL;
 	int* csr_row = NULL;
 	int* csr_col = NULL;
-	T* b_val = NULL;
-	T* c_val = NULL;
+	X* b_val = NULL;
+	X* c_val = NULL;
 	csr.copyMatToDevice(&csr_val,&csr_row,&csr_col);
 	x.allocVectorToDevice(&b_val);
 	y.allocVectorToDevice(&c_val);
@@ -176,7 +176,7 @@ int gpuLightSpMV(CSR<T>& csr,Vec<T>& x,Vec<T>& y){
 */
 	// end Kernel
 
-	cudaError_t err = cudaMemcpy(y.val,c_val,n*sizeof(T),cudaMemcpyDeviceToHost);
+	cudaError_t err = cudaMemcpy(y.val,c_val,n*sizeof(X),cudaMemcpyDeviceToHost);
 	if(err != cudaSuccess){
 		fprintf(stderr,"spmv copy y: error code %d\n",err);
 	}

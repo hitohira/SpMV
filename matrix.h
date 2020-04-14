@@ -8,8 +8,12 @@
 template<typename T>
 class Vec{
 public:
-	int m = 0;
-	T* val = NULL;
+	int m;
+	T* val;
+	Vec(){
+		m = 0;
+		val = NULL;
+	}
 	~Vec(){
 		if(val) free(val);
 	}
@@ -63,11 +67,17 @@ public:
 template<typename T>
 class CSR{
 public:
-	int m = 0; // row
-	int n = 0; // col
-	T* val = NULL;
-	int* colind = NULL;
-	int* rowptr = NULL;
+	int m; // row
+	int n; // col
+	T* val;
+	int* colind;
+	int* rowptr;
+	CSR(){
+		m = n = 0;
+		val = NULL;
+		colind = NULL;
+		rowptr = NULL;
+	}
 	~CSR(){
 		printf("csr del\n");
 		if(val) free(val);
@@ -86,11 +96,16 @@ public:
 template<typename T>
 class ELL{
 public:
-	int m = 0; // row
-	int n = 0; // col
-	int k = 0;
-	T* val = NULL;
-	int* colind = NULL;
+	int m; // row
+	int n; // col
+	int k;
+	T* val;
+	int* colind;
+	ELL(){
+		m = n = k = 0;
+		val = NULL;
+		colind = NULL;
+	}
 	~ELL(){
 		printf("ell del\n");
 		if(val) free(val);
