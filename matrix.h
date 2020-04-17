@@ -69,9 +69,9 @@ public:
 		}
 		return true;
 	}
-	void AllocVectorToDevice();
-	void SetVectorValueToDevice();
-	void GetVectorValueFromDevice();
+	int AllocVectorToDevice();
+	int SetVectorValueToDevice();
+	int GetVectorValueFromDevice();
 };
 
 template<typename T>
@@ -109,7 +109,8 @@ public:
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
 	void MklMul(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
-	void CopyMatToDevice();
+	void MulLightSpMVOnGPU(Vec<T>& x,Vec<T>& y);
+	int CopyMatToDevice();
 };
 
 template<typename T>
@@ -140,7 +141,7 @@ public:
 	void Dump();
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
-	void CopyMatToDevice();
+	int CopyMatToDevice();
 };
 
 

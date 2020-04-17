@@ -11,54 +11,79 @@ template void FreeDeviceMemory(double* d_ptr);
 template void FreeDeviceMemory(int* d_ptr);
 
 template<typename T>
-void CSR<T>::CopyMatToDevice(){
+int CSR<T>::CopyMatToDevice(){
+		cudaError_t err;
 	  int nnz = rowptr[m];
 		if(d_val) cudaFree(d_val);
 		if(d_rowptr) cudaFree(d_rowptr);
 		if(d_colind) cudaFree(d_colind);
-		 cudaMalloc((void**)&d_val,nnz*sizeof(T));
-		 cudaMalloc((void**)&d_colind,nnz*sizeof(int));
-		 cudaMalloc((void**)&d_rowptr,(m+1)*sizeof(int));
-		 cudaMemcpy(d_val,val,nnz*sizeof(T),cudaMemcpyHostToDevice);
-		 cudaMemcpy(d_colind,colind,nnz*sizeof(int),cudaMemcpyHostToDevice);
-		 cudaMemcpy(d_rowptr,rowptr,(m+1)*sizeof(int),cudaMemcpyHostToDevice);
+		 err = cudaMalloc((void**)&d_val,nnz*sizeof(T));
+		 if(err != cudaSuccess){ fprintf(stderr,"fail to malloc on GPU\n");return -1;}
+		 err = cudaMalloc((void**)&d_colind,nnz*sizeof(int));
+		 if(err != cudaSuccess){ fprintf(stderr,"fail to malloc on GPU\n");return -1;}
+		 err = cudaMalloc((void**)&d_rowptr,(m+1)*sizeof(int));
+		 if(err != cudaSuccess){ fprintf(stderr,"fail to malloc on GPU\n");return -1;}
+		 err = cudaMemcpy(d_val,val,nnz*sizeof(T),cudaMemcpyHostToDevice);
+		 if(err != cudaSuccess){ fprintf(stderr,"fail to memcpy to GPU\n");return -1;}
+		 err = cudaMemcpy(d_colind,colind,nnz*sizeof(int),cudaMemcpyHostToDevice);
+		 if(err != cudaSuccess){ fprintf(stderr,"fail to memcpy to GPU\n");return -1;}
+		 err = cudaMemcpy(d_rowptr,rowptr,(m+1)*sizeof(int),cudaMemcpyHostToDevice);
+		 if(err != cudaSuccess){ fprintf(stderr,"fail to memcpy to GPU\n");return -1;}
+		 return 0;
 }
-template void CSR<float>::CopyMatToDevice();
-template void CSR<double>::CopyMatToDevice();
+template int CSR<float>::CopyMatToDevice();
+template int CSR<double>::CopyMatToDevice();
 
 template<typename T>
-void Vec<T>::AllocVectorToDevice(){
+int Vec<T>::AllocVectorToDevice(){
 	if(d_val) cudaFree(d_val);
-	cudaMalloc((void**)&d_val,m*sizeof(T));
+	if(cudaMalloc((void**)&d_val,m*sizeof(T)) == cudaSuccess){
+		return 0;
+	}
+	else{
+		return -1;
+	}
 }
-template void Vec<float>::AllocVectorToDevice();
-template void Vec<double>::AllocVectorToDevice();
+template int Vec<float>::AllocVectorToDevice();
+template int Vec<double>::AllocVectorToDevice();
 
 template<typename T>
-void Vec<T>::SetVectorValueToDevice(){
-	cudaMemcpy(d_val,val,m*sizeof(T),cudaMemcpyHostToDevice);
+int Vec<T>::SetVectorValueToDevice(){
+	if(cudaMemcpy(d_val,val,m*sizeof(T),cudaMemcpyHostToDevice) == cudaSuccess){
+		return 0;
+	}
+	return -1;
 }
-template void Vec<float>::SetVectorValueToDevice();
-template void Vec<double>::SetVectorValueToDevice();
+template int Vec<float>::SetVectorValueToDevice();
+template int Vec<double>::SetVectorValueToDevice();
 
 template<typename T>
-void Vec<T>::GetVectorValueFromDevice(){
-	cudaMemcpy(val,d_val,m*sizeof(T),cudaMemcpyDeviceToHost);
+int Vec<T>::GetVectorValueFromDevice(){
+	if(cudaMemcpy(val,d_val,m*sizeof(T),cudaMemcpyDeviceToHost) == cudaSuccess){
+		return 0;
+	}
+	return -1;
 }
-template void Vec<float>::GetVectorValueFromDevice();
-template void Vec<double>::GetVectorValueFromDevice();
+template int Vec<float>::GetVectorValueFromDevice();
+template int Vec<double>::GetVectorValueFromDevice();
 
 
 template<typename T>
-void ELL<T>::CopyMatToDevice(){
+int ELL<T>::CopyMatToDevice(){
+	cudaError_t err;
 	if(d_val) cudaFree(d_val);
 	if(d_colind) cudaFree(d_colind);
-	cudaMalloc((void**)&d_val,m*k*sizeof(T));
-	cudaMalloc((void**)&d_colind,m*k*sizeof(int));
+	err = cudaMalloc((void**)&d_val,m*k*sizeof(T));
+	if(err != cudaSuccess){ fprintf(stderr,"fail to malloc on GPU\n");return -1;}
+	err = cudaMalloc((void**)&d_colind,m*k*sizeof(int));
+	if(err != cudaSuccess){ fprintf(stderr,"fail to malloc on GPU\n");return -1;}
 
-	cudaMemcpy(d_val,val,m*k*sizeof(T),cudaMemcpyHostToDevice);
-	cudaMemcpy(d_colind,colind,m*k*sizeof(T),cudaMemcpyHostToDevice);
+	err = cudaMemcpy(d_val,val,m*k*sizeof(T),cudaMemcpyHostToDevice);
+	if(err != cudaSuccess){ fprintf(stderr,"fail to memcpy to GPU\n");return -1;}
+	err = cudaMemcpy(d_colind,colind,m*k*sizeof(T),cudaMemcpyHostToDevice);
+	if(err != cudaSuccess){ fprintf(stderr,"fail to memcpy to GPU\n");return -1;}
+	return 0;
 }
-template void ELL<float>::CopyMatToDevice();
-template void ELL<double>::CopyMatToDevice();
+template int ELL<float>::CopyMatToDevice();
+template int ELL<double>::CopyMatToDevice();
 

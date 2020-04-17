@@ -82,16 +82,15 @@ template<> void wrapKernel(const int B,const int T,const int V,int* row_counter,
 
 
 template<typename X>
-int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
-	if(csr.n != x.m || csr.m != y.m){
+void CSR<X>::MulLightSpMVOnGPU(Vec<X>& x,Vec<X>& y){
+	if(n != x.m || m != y.m){
 		fprintf(stderr,"wrong size of data\n");
-		return -1;
+		return;
 	}
-	int m = csr.m;
-	int nnz = csr.rowptr[m];
+	int nnz = rowptr[m];
 
 /*
-	csr.CopyMatToDevice();
+	CopyMatToDevice();
 	x.AllocVectorToDevice();
 	y.AllocVectorToDevice();
 	x.SetVectorValueToDevice();
@@ -99,17 +98,21 @@ int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
 	y.SetVectorValueToDevice();
 */
 
-	int* row_counter;
-	cudaMalloc((void**)&row_counter,sizeof(int));
-	cudaMemset(row_counter,0,sizeof(int));
 
 	cudaDeviceProp prop;
-	cudaGetDeviceProperties(&prop,0);
+	if(cudaGetDeviceProperties(&prop,0) != cudaSuccess){
+		fprintf(stderr,"fail at accessing GPU device\n");
+		return;
+	}
 	int T = prop.maxThreadsPerBlock;
 	int B = prop.multiProcessorCount * prop.maxThreadsPerMultiProcessor / T;
 	int avgRowLength = nnz / m;
 	
 	printf("B=%d T=%d ave=%d\n",B,T,avgRowLength);
+
+	int* row_counter;
+	cudaMalloc((void**)&row_counter,sizeof(int));
+	cudaMemset(row_counter,0,sizeof(int));
 
 	// Kernel
 /*
@@ -119,16 +122,16 @@ int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
 	cudaEventRecord(e_s);
 */
 	if(avgRowLength <= 2){
-		wrapKernel(B,T,2,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
+		wrapKernel(B,T,2,row_counter,m,d_rowptr,d_colind,d_val,x.d_val,y.d_val);
 	}
 	else if(avgRowLength <= 4){
-		wrapKernel(B,T,4,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
+		wrapKernel(B,T,4,row_counter,m,d_rowptr,d_colind,d_val,x.d_val,y.d_val);
 	}
 	else if(avgRowLength <= 64){
-		wrapKernel(B,T,8,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
+		wrapKernel(B,T,8,row_counter,m,d_rowptr,d_colind,d_val,x.d_val,y.d_val);
 	}
 	else{
-		wrapKernel(B,T,32,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
+		wrapKernel(B,T,32,row_counter,m,d_rowptr,d_colind,d_val,x.d_val,y.d_val);
 	}
 /*
 	cudaEventRecord(e_e);
@@ -144,7 +147,7 @@ int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
 	y.GetVectorValueFromDevice();
 	
 	cudaFree(row_counter);
-	return 0;
+	return;
 }
-template int gpuLightSpMV(CSR<float>& csr,Vec<float>& x,Vec<float>& y);
-template int gpuLightSpMV(CSR<double>& csr,Vec<double>& x,Vec<double>& y);
+template void CSR<float>::MulLightSpMVOnGPU(Vec<float>& x,Vec<float>& y);
+template void CSR<double>::MulLightSpMVOnGPU(Vec<double>& x,Vec<double>& y);
