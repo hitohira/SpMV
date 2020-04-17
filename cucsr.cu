@@ -81,39 +81,6 @@ template<> void wrapKernel(const int B,const int T,const int V,int* row_counter,
 }
 
 
-template<typename T>
-void CSR<T>::copyMatToDevice(T** d_val,int** d_rowptr,int** d_colind){
-	int nnz = rowptr[m];
-	
-	if(*d_val) cudaFree(*d_val);
-	if(*d_rowptr) cudaFree(*d_rowptr);
-	if(*d_colind) cudaFree(*d_colind);
-	cudaMalloc((void**)d_val,nnz*sizeof(T));
-	cudaMalloc((void**)d_colind,nnz*sizeof(int));
-	cudaMalloc((void**)d_rowptr,(m+1)*sizeof(int));
-
-	cudaMemcpy(*d_val,val,nnz*sizeof(T),cudaMemcpyHostToDevice);
-	cudaMemcpy(*d_colind,colind,nnz*sizeof(int),cudaMemcpyHostToDevice);
-	cudaMemcpy(*d_rowptr,rowptr,(m+1)*sizeof(int),cudaMemcpyHostToDevice);
-}
-template void CSR<float>::copyMatToDevice(float** d_val,int** d_rowptr,int** d_colind);
-template void CSR<double>::copyMatToDevice(double** d_val,int** d_rowptr,int** d_colind);
-
-template<typename T>
-void Vec<T>::allocVectorToDevice(T** d_v){
-	if(*d_v) cudaFree(*d_v);
-	cudaMalloc((void**)d_v,m*sizeof(T));
-}
-template void Vec<float>::allocVectorToDevice(float** d_v);
-template void Vec<double>::allocVectorToDevice(double** d_v);
-
-template<typename T>
-void Vec<T>::setVectorValueToDevice(T* d_v){
-	cudaMemcpy(d_v,val,m*sizeof(T),cudaMemcpyHostToDevice);
-}
-template void Vec<float>::setVectorValueToDevice(float* d_v);
-template void Vec<double>::setVectorValueToDevice(double* d_v);
-
 template<typename X>
 int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
 	if(csr.n != x.m || csr.m != y.m){
@@ -121,18 +88,16 @@ int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
 		return -1;
 	}
 	int m = csr.m;
-	int n = csr.n;
 	int nnz = csr.rowptr[m];
 
-	X* csr_val = NULL;
-	int* csr_row = NULL;
-	int* csr_col = NULL;
-	X* b_val = NULL;
-	X* c_val = NULL;
-	csr.copyMatToDevice(&csr_val,&csr_row,&csr_col);
-	x.allocVectorToDevice(&b_val);
-	y.allocVectorToDevice(&c_val);
-	x.setVectorValueToDevice(b_val);
+/*
+	csr.CopyMatToDevice();
+	x.AllocVectorToDevice();
+	y.AllocVectorToDevice();
+	x.SetVectorValueToDevice();
+	y.Fill(0);
+	y.SetVectorValueToDevice();
+*/
 
 	int* row_counter;
 	cudaMalloc((void**)&row_counter,sizeof(int));
@@ -154,16 +119,16 @@ int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
 	cudaEventRecord(e_s);
 */
 	if(avgRowLength <= 2){
-		wrapKernel(B,T,2,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,2,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
 	}
 	else if(avgRowLength <= 4){
-		wrapKernel(B,T,4,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,4,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
 	}
 	else if(avgRowLength <= 64){
-		wrapKernel(B,T,8,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,8,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
 	}
 	else{
-		wrapKernel(B,T,32,row_counter,m,csr_row,csr_col,csr_val,b_val,c_val);
+		wrapKernel(B,T,32,row_counter,m,csr.d_rowptr,csr.d_colind,csr.d_val,x.d_val,y.d_val);
 	}
 /*
 	cudaEventRecord(e_e);
@@ -175,18 +140,10 @@ int gpuLightSpMV(CSR<X>& csr,Vec<X>& x,Vec<X>& y){
 	fprintf(stderr,"LightSpMV Kernel FLOPS : %f MFLOPS\n",2*nnz/elasped*1e-6);
 */
 	// end Kernel
-
-	cudaError_t err = cudaMemcpy(y.val,c_val,n*sizeof(X),cudaMemcpyDeviceToHost);
-	if(err != cudaSuccess){
-		fprintf(stderr,"spmv copy y: error code %d\n",err);
-	}
+	
+	y.GetVectorValueFromDevice();
 	
 	cudaFree(row_counter);
-	cudaFree(c_val);
-	cudaFree(b_val);
-	cudaFree(csr_row);
-	cudaFree(csr_col);
-	cudaFree(csr_val);
 	return 0;
 }
 template int gpuLightSpMV(CSR<float>& csr,Vec<float>& x,Vec<float>& y);

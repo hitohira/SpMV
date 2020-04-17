@@ -138,6 +138,7 @@ void CSR<T>::MulOnCPU(Vec<T>& x, Vec<T>& y){
 	int i,j;
 	#pragma omp parallel for private(j) 
 	for(i = 0; i < m; i++){
+		y.val[i] = 0;
 		for(j = rowptr[i]; j < rowptr[i+1]; j++){
 			y.val[i] += val[j] * x.val[colind[j]];
 		}

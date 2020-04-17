@@ -62,8 +62,9 @@ template void ELL<double>::Dump();
 template<typename T>
 void ELL<T>::MulOnCPU(Vec<T>& x, Vec<T>& y){
 	int i,j;
-	#pragma omp parallel for private(j) collapse(2)
+	#pragma omp parallel for private(j) 
 	for(i = 0; i < m; i++){
+		y.val[i] = 0;
 		for(j = 0; j < k; j++){
 			int idx = m*j + i;
 			y.val[i] += val[idx] * x.val[colind[idx]];

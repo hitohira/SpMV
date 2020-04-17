@@ -10,8 +10,8 @@ int main(){
 	Vec<float> y,y2;
 	printf("start\n");
 //	csr.LoadFromMM("matrices/cage3/cage3.mtx");
-//	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
-	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
+	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
+//	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
 	ell.TransformFromCSR(csr);
 	x.Create(csr.n);
 	x.Fill(1.0f);
@@ -36,13 +36,16 @@ int main(){
 		double t2 = elasped();
 		acc2 += t2-t1;
 	}
-	//ell.MulOnCPU(x2,y2);
-	if(y.Equal(y2)){
+//	ell.MulOnCPU(x2,y2);
+	if(y.Equal(y2,1e-4)){
 		printf("same result\n");
 	}
 	else{
 		printf("result wrong\n");
 	}
+//	y.Dump();
+//	y2.Dump();
+
 	printf("elasped\nnaive : %f sec\nMKL : %f sec\n",acc1/10,acc2/10);
 	printf("end\n");
 	return 0;

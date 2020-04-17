@@ -4,24 +4,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <omp.h>
+
+template<typename T>
+void FreeDeviceMemory(T* d_ptr);
 
 template<typename T>
 class Vec{
 public:
 	int m;
 	T* val;
+	T* d_val;
 	Vec(){
 		m = 0;
 		val = NULL;
+		d_val = NULL;
 	}
 	~Vec(){
 		if(val) free(val);
+		if(d_val) FreeDeviceMemory(d_val);
 	}
 	void Create(int m){
 		this->m = m;
 		val = (T*)malloc(m*sizeof(T));
 	}
 	void Fill(T x){
+		#pragma omp parallel for
 		for(int i = 0; i < m; i++){
 			val[i] = x;
 		}
@@ -32,6 +40,7 @@ public:
 		val = NULL;
 		val = (T*)malloc(m*sizeof(T));
 		if(val == NULL) return;
+		#pragma omp parallel for
 		for(int i = 0; i < m; i++){
 			val[i] = v.val[i];
 		}
@@ -50,18 +59,19 @@ public:
 		}
 		return (T)sqrt(acc);
 	}
-	bool Equal(Vec<T>& v){
-		const T r = 1e-4;
+	bool Equal(Vec<T>& v,T eps){
 		T nrm = Norm2();
 		for(int i = 0; i < m; i++){
-			if(fabs(val[i]-v.val[i]) > r * nrm){
+			if(fabs(val[i]-v.val[i]) > eps * nrm){
+				fprintf(stderr,"Vec NormDiff[%d] = %f\n",i,(val[i] - v.val[i]) / nrm);
 				return false;
 			}
 		}
 		return true;
 	}
-	void allocVectorToDevice(T** d_v);
-	void setVectorValueToDevice(T* d_v);
+	void AllocVectorToDevice();
+	void SetVectorValueToDevice();
+	void GetVectorValueFromDevice();
 };
 
 template<typename T>
@@ -72,17 +82,26 @@ public:
 	T* val;
 	int* colind;
 	int* rowptr;
+	T* d_val;
+	int* d_colind;
+	int* d_rowptr;
 	CSR(){
 		m = n = 0;
 		val = NULL;
 		colind = NULL;
 		rowptr = NULL;
+		d_val = NULL;
+		d_colind = NULL;
+		d_rowptr = NULL;
 	}
 	~CSR(){
 		printf("csr del\n");
 		if(val) free(val);
 		if(colind) free(colind);
 		if(rowptr) free(rowptr);
+		if(d_val) FreeDeviceMemory(d_val);
+		if(d_colind) FreeDeviceMemory(d_colind);
+		if(d_rowptr) FreeDeviceMemory(d_rowptr);
 	}
 	void LoadFromMM(const char* filename);
 	void Transpose();
@@ -90,7 +109,7 @@ public:
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
 	void MklMul(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
-	void copyMatToDevice(T** d_val,int** d_rowptr,int** d_colind);
+	void CopyMatToDevice();
 };
 
 template<typename T>
@@ -101,21 +120,27 @@ public:
 	int k;
 	T* val;
 	int* colind;
+	T* d_val;
+	int* d_colind;
 	ELL(){
 		m = n = k = 0;
 		val = NULL;
 		colind = NULL;
+		d_val = NULL;
+		d_colind = NULL;
 	}
 	~ELL(){
 		printf("ell del\n");
 		if(val) free(val);
 		if(colind) free(colind);
+		if(d_val) FreeDeviceMemory(d_val);
+		if(d_colind) FreeDeviceMemory(d_colind);
 	}
 	void TransformFromCSR(const CSR<T>& csr);
 	void Dump();
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
-	void copyMatToDevice(T** d_val,int** d_colind);
+	void CopyMatToDevice();
 };
 
 

@@ -20,22 +20,15 @@ __global__ void EllKernelS(const int nrow,const int width,
 	}
 }
 
-template<typename T>
-void ELL<T>::copyMatToDevice(T** d_val,int** d_colind){
-	if(*d_val) cudaFree(*d_val);
-	if(*d_colind) cudaFree(*d_colind);
-	cudaMalloc((void**)d_val,m*k*sizeof(T));
-	cudaMalloc((void**)d_colind,m*k*sizeof(int));
-
-	cudaMemcpy(*d_val,val,m*k*sizeof(T),cudaMemcpyHostToDevice);
-	cudaMemcpy(*d_colind,colind,m*k*sizeof(T),cudaMemcpyHostToDevice);
-}
 
 template<typename X>
 void ELL<X>::MulOnGPU(Vec<X>& x, Vec<X>& y){
+}
+template<> void ELL<float>::MulOnGPU(Vec<float>& x, Vec<float>& y){
 	int T = 1024;
 	int B = m / T + 1;
-	
+	EllKernelS<<<B,T>>>(m,k,d_colind,d_val,x.d_val,y.d_val);
 }
-template void ELL<float>::MulOnGPU(Vec<float>& x, Vec<float>& y);
-template void ELL<double>::MulOnGPU(Vec<double>& x, Vec<double>& y);
+template<> void ELL<double>::MulOnGPU(Vec<double>& x, Vec<double>& y){
+
+}
