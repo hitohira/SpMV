@@ -147,7 +147,41 @@ public:
 	int CopyMatToDevice();
 };
 
-
+template<typename T>
+class COO{
+public:
+	int m;
+	int n;
+	int nnz;
+	T* val;
+	int* colind;
+	int* rowind;
+	T* d_val;
+	int* d_colind;
+	int* d_rowind;
+	COO(){
+		m = n = nnz = 0;
+		val = NULL;
+		colind = NULL;
+		rowind = NULL;
+		d_val = NULL;
+		d_colind = NULL;
+		d_rowind = NULL;
+	}
+	~COO(){
+		if(val) free(val);
+		if(colind) free(colind);
+		if(rowind) free(rowind);
+		if(d_val) FreeDeviceMemory(d_val);
+		if(d_colind) FreeDeviceMemory(d_colind);
+		if(d_rowind) FreeDeviceMemory(d_rowind);
+	}
+	void TransformFromCSR(const CSR<T>& csr);
+	void Dump();
+	void MulOnCPU(Vec<T>& x,Vec<T>& y);
+	void MulOnGPU(Vec<T>& x,Vec<T>& y);
+	int CopyMatToDevice();
+};
 
 
 #endif

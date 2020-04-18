@@ -1,11 +1,12 @@
 #include "matrix.h"
 #include "util.h"
 
-const int TIMES = 10;
+const int TIMES = 50;
 
 int main(){
 	CSR<float> csr;
 	ELL<float> ell;
+	COO<float> coo;
 	Vec<float> x,x2;
 	Vec<float> y,y2;
 	printf("start\n");
@@ -19,9 +20,11 @@ int main(){
 	y.Fill(0);
 	y2.Copy(y);
 
+	csr.CopyMatToDevice();
 	ell.TransformFromCSR(csr);
 	ell.CopyMatToDevice();
-	csr.CopyMatToDevice();
+	coo.TransformFromCSR(csr);
+//	coo.CopyMatToDevice();
 	x.AllocVectorToDevice();
 	x.SetVectorValueToDevice();
 	y.AllocVectorToDevice();
@@ -29,7 +32,8 @@ int main(){
 
 //	csr.MulLightSpMVOnGPU(x,y);
 //	ell.MulOnGPU(x,y);
-	csr.CuSparseMul(x,y);
+//	csr.CuSparseMul(x,y);
+	coo.MulOnCPU(x,y);
 	csr.MklMul(x2,y2);
 
 
@@ -39,11 +43,14 @@ int main(){
 
 	t1 = elasped();
 	for(int i = 0; i < TIMES; i++){
-		x.SetVectorValueToDevice();
+//		x.SetVectorValueToDevice();
+
 //		csr.MulLightSpMVOnGPU(x,y);
 //		ell.MulOnGPU(x,y);
-		csr.CuSparseMul(x,y);
-		y.GetVectorValueFromDevice();
+//		csr.CuSparseMul(x,y);
+		coo.MulOnCPU(x,y);
+		
+//		y.GetVectorValueFromDevice();
 	}
 	t2 = elasped();
 	acc1 = t2-t1;
