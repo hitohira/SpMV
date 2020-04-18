@@ -6,6 +6,8 @@
 #include <math.h>
 #include <omp.h>
 
+#include "util.h"
+
 template<typename T>
 void FreeDeviceMemory(T* d_ptr);
 
@@ -110,6 +112,7 @@ public:
 	void MklMul(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
 	void MulLightSpMVOnGPU(Vec<T>& x,Vec<T>& y);
+	void CuSparseMul(Vec<T>& x, Vec<T>& y);
 	int CopyMatToDevice();
 };
 

@@ -13,7 +13,8 @@ __device__ int vecGetRowIndex(const int V,int* row_counter){
 	if(vecLaneId == 0){
 		row = atomicAdd(row_counter,1);
 	}
-	return __shfl(row,0,V);
+	return __shfl_sync(0xffffffff,row,0,V);
+//	return __shfl(row,0,V);
 }
 __device__ int warpGetRowIndex(const int V,int* row_counter){
 	int laneIdInWarp = threadIdx.x & (warpSize-1);
@@ -22,7 +23,8 @@ __device__ int warpGetRowIndex(const int V,int* row_counter){
 	if(laneIdInWarp == 0){
 		row = atomicAdd(row_counter,warpSize / V);
 	}
-	return __shfl(row,0,warpSize) + vecIdInWarp;
+	return __shfl_sync(0xffffffff,row,0,warpSize) + vecIdInWarp;
+//	return __shfl(row,0,warpSize) + vecIdInWarp;
 }
 __global__ void spmvKernelS(const int V,int* row_counter,const int R,const int* row_offset,
                             const int* col,const float* val, const float* b,float* c){
@@ -53,7 +55,8 @@ __global__ void spmvKernelS(const int V,int* row_counter,const int R,const int* 
 			}
 		}
 		for(int i = V>>1; i > 0; i>>=1){
-			dot_prod += __shfl_down(dot_prod,i,V);
+			dot_prod += __shfl_down_sync(0xffffffff,dot_prod,i,V);
+//			dot_prod += __shfl_down(dot_prod,i,V);
 		}
 		if(vecLaneId == 0){
 			c[row] = dot_prod;
@@ -97,13 +100,12 @@ void CSR<X>::MulLightSpMVOnGPU(Vec<X>& x,Vec<X>& y){
 	y.Fill(0);
 	y.SetVectorValueToDevice();
 */
-
-
 	cudaDeviceProp prop;
 	if(cudaGetDeviceProperties(&prop,0) != cudaSuccess){
 		fprintf(stderr,"fail at accessing GPU device\n");
 		return;
 	}
+
 	int T = prop.maxThreadsPerBlock;
 	int B = prop.multiProcessorCount * prop.maxThreadsPerMultiProcessor / T;
 	int avgRowLength = nnz / m;

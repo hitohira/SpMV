@@ -1,7 +1,7 @@
 #include "matrix.h"
 #include "util.h"
 
-const int TIMES = 50;
+const int TIMES = 10;
 
 int main(){
 	CSR<float> csr;
@@ -20,21 +20,19 @@ int main(){
 	y2.Copy(y);
 
 	ell.TransformFromCSR(csr);
-	int res = ell.CopyMatToDevice();
-	
-//	int res = csr.CopyMatToDevice();
-	if(res == -1){
-		return 0;
-	}
+	ell.CopyMatToDevice();
+	csr.CopyMatToDevice();
 	x.AllocVectorToDevice();
 	x.SetVectorValueToDevice();
 	y.AllocVectorToDevice();
 
 
 //	csr.MulLightSpMVOnGPU(x,y);
-//	csr.MulOnCPU(x,y);
-	ell.MulOnGPU(x,y);
+//	ell.MulOnGPU(x,y);
+	csr.CuSparseMul(x,y);
 	csr.MklMul(x2,y2);
+
+
 	double acc1 = 0;
 	double acc2 = 0;
 	double t1,t2;
@@ -43,9 +41,9 @@ int main(){
 	for(int i = 0; i < TIMES; i++){
 		x.SetVectorValueToDevice();
 //		csr.MulLightSpMVOnGPU(x,y);
-		ell.MulOnGPU(x,y);
+//		ell.MulOnGPU(x,y);
+		csr.CuSparseMul(x,y);
 		y.GetVectorValueFromDevice();
-//		csr.MulOnCPU(x,y);
 	}
 	t2 = elasped();
 	acc1 = t2-t1;
