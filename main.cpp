@@ -1,7 +1,7 @@
 #include "matrix.h"
 #include "util.h"
 
-const int TIMES = 50;
+const int TIMES = 10;
 
 int main(){
 	CSR<float> csr;
@@ -11,8 +11,8 @@ int main(){
 	Vec<float> y,y2;
 	printf("start\n");
 //	csr.LoadFromMM("matrices/cage3/cage3.mtx");
-	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
-//	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
+//	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
+	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
 	x.Create(csr.n);
 	x.Fill(1.0f);
 	x2.Copy(x);

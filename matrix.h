@@ -7,6 +7,7 @@
 #include <omp.h>
 
 #include "util.h"
+#include "tex.h"
 
 template<typename T>
 void FreeDeviceMemory(T* d_ptr);
@@ -17,6 +18,7 @@ public:
 	int m;
 	T* val;
 	T* d_val;
+	TexVec<T> texVec;
 	Vec(){
 		m = 0;
 		val = NULL;
