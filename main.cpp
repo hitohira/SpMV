@@ -1,7 +1,7 @@
 #include "matrix.h"
 #include "util.h"
 
-const int TIMES = 10;
+const int TIMES = 50;
 
 int main(){
 	CSR<float> csr;
@@ -11,8 +11,8 @@ int main(){
 	Vec<float> y,y2;
 	printf("start\n");
 //	csr.LoadFromMM("matrices/cage3/cage3.mtx");
-//	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
-	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
+	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
+//	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
 	x.Create(csr.n);
 	x.Fill(1.0f);
 	x2.Copy(x);
@@ -27,15 +27,25 @@ int main(){
 //	coo.CopyMatToDevice();
 	x.AllocVectorToDevice();
 	x.SetVectorValueToDevice();
+//	x.SetTexVec();
+//	x2.AllocVectorToDevice();
+//	x2.SetVectorValueToDevice();
 	y.AllocVectorToDevice();
-
+//	y2.AllocVectorToDevice();
 
 //	csr.MulLightSpMVOnGPU(x,y);
-//	ell.MulOnGPU(x,y);
+//	ell.MulOnGPUWithTex(x,y);
+		ell.MulOnGPU(x,y);
 //	csr.CuSparseMul(x,y);
-	coo.MulOnCPU(x,y);
+//	coo.MulOnCPU(x,y);
 	csr.MklMul(x2,y2);
 
+/*	
+	y.GetVectorValueFromDevice();
+	y2.GetVectorValueFromDevice();
+	y.Dump();
+	y2.Dump();
+*/
 
 	double acc1 = 0;
 	double acc2 = 0;
@@ -43,20 +53,25 @@ int main(){
 
 	t1 = elasped();
 	for(int i = 0; i < TIMES; i++){
-//		x.SetVectorValueToDevice();
+		x.SetVectorValueToDevice();
 
 //		csr.MulLightSpMVOnGPU(x,y);
 //		ell.MulOnGPU(x,y);
+		ell.MulOnGPU(x,y);
 //		csr.CuSparseMul(x,y);
-		coo.MulOnCPU(x,y);
+//		coo.MulOnCPU(x,y);
 		
-//		y.GetVectorValueFromDevice();
+		y.GetVectorValueFromDevice();
 	}
 	t2 = elasped();
 	acc1 = t2-t1;
 	t1 = elasped();
 	for(int i = 0; i < TIMES; i++){
+//		x2.SetVectorValueToDevice();
+
 		csr.MklMul(x2,y2);
+
+//		y2.GetVectorValueFromDevice();
 	}
 	t2 = elasped();
 	acc2 = t2-t1;
@@ -71,7 +86,7 @@ int main(){
 //	y.Dump();
 //	y2.Dump();
 
-	printf("elasped\nnaive : %f sec\nMKL : %f sec\n",acc1/TIMES,acc2/TIMES);
+	printf("elasped\nA : %f sec\nB : %f sec\n",acc1/TIMES,acc2/TIMES);
 	printf("end\n");
 	return 0;
 }

@@ -73,6 +73,9 @@ public:
 		}
 		return true;
 	}
+	void SetTexVec(){
+		texVec.SetTexVec(m,d_val);
+	}
 	int AllocVectorToDevice();
 	int SetVectorValueToDevice();
 	int GetVectorValueFromDevice();
@@ -146,6 +149,7 @@ public:
 	void Dump();
 	void MulOnCPU(Vec<T>& x, Vec<T>& y);
 	void MulOnGPU(Vec<T>& x, Vec<T>& y);
+	void MulOnGPUWithTex(Vec<T>& x,Vec<T>& y);
 	int CopyMatToDevice();
 };
 
