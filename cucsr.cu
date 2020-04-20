@@ -111,7 +111,7 @@ void CSR<X>::MulLightSpMVOnGPU(Vec<X>& x,Vec<X>& y){
 	int B = prop.multiProcessorCount * prop.maxThreadsPerMultiProcessor / T;
 	int avgRowLength = nnz / m;
 	
-	printf("B=%d T=%d ave=%d\n",B,T,avgRowLength);
+//	fprintf(stderr,"B=%d T=%d ave=%d\n",B,T,avgRowLength);
 
 	int* row_counter;
 	cudaMalloc((void**)&row_counter,sizeof(int));
@@ -162,6 +162,7 @@ template<typename T>
 void CSR<T>::CuSparseMul(Vec<T>& x, Vec<T>& y){
 }
 template<> void CSR<float>::CuSparseMul(Vec<float>& x,Vec<float>& y){
+	if(d_val == NULL) return;
 	cusparseHandle_t handle;
 	cusparseMatDescr_t descr;
 
@@ -180,6 +181,7 @@ template<> void CSR<float>::CuSparseMul(Vec<float>& x,Vec<float>& y){
 	cusparseDestroy(handle);
 }
 template<> void CSR<double>::CuSparseMul(Vec<double>& x,Vec<double>& y){
+	if(d_val == NULL) return;
 	cusparseHandle_t handle;
 	cusparseMatDescr_t descr;
 

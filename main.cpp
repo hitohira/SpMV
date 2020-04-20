@@ -11,8 +11,8 @@ int main(){
 	Vec<float> y,y2;
 	printf("start\n");
 //	csr.LoadFromMM("matrices/cage3/cage3.mtx");
-	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
-//	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
+//	csr.LoadFromMM("matrices/ldoor/ldoor.mtx");
+	csr.LoadFromMM("matrices/bbmat/bbmat.mtx");
 	x.Create(csr.n);
 	x.Fill(1.0f);
 	x2.Copy(x);
@@ -24,18 +24,18 @@ int main(){
 	ell.TransformFromCSR(csr);
 	ell.CopyMatToDevice();
 	coo.TransformFromCSR(csr);
-//	coo.CopyMatToDevice();
+	coo.CopyMatToDevice();
 	x.AllocVectorToDevice();
 	x.SetVectorValueToDevice();
-//	x.SetTexVec();
-//	x2.AllocVectorToDevice();
-//	x2.SetVectorValueToDevice();
+	x.SetTexVec();
+	x2.AllocVectorToDevice();
+	x2.SetVectorValueToDevice();
 	y.AllocVectorToDevice();
-//	y2.AllocVectorToDevice();
+	y2.AllocVectorToDevice();
 
-//	csr.MulLightSpMVOnGPU(x,y);
-//	ell.MulOnGPUWithTex(x,y);
-		ell.MulOnGPU(x,y);
+//		csr.MulLightSpMVOnGPU(x,y);
+		ell.MulOnGPUWithTex(x,y);
+//	ell.MulOnGPU(x,y);
 //	csr.CuSparseMul(x,y);
 //	coo.MulOnCPU(x,y);
 	csr.MklMul(x2,y2);
@@ -51,20 +51,22 @@ int main(){
 	double acc2 = 0;
 	double t1,t2;
 
+	puts("1");
 	t1 = elasped();
 	for(int i = 0; i < TIMES; i++){
 		x.SetVectorValueToDevice();
 
 //		csr.MulLightSpMVOnGPU(x,y);
 //		ell.MulOnGPU(x,y);
-		ell.MulOnGPU(x,y);
-//		csr.CuSparseMul(x,y);
+//		ell.MulOnGPU(x,y);
+		csr.CuSparseMul(x,y);
 //		coo.MulOnCPU(x,y);
 		
 		y.GetVectorValueFromDevice();
 	}
 	t2 = elasped();
 	acc1 = t2-t1;
+	puts("2");
 	t1 = elasped();
 	for(int i = 0; i < TIMES; i++){
 //		x2.SetVectorValueToDevice();

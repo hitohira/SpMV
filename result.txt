@@ -1,0 +1,81 @@
+matrices/bbmat/bbmat.mtx
+coo_mkl ave = 6.162159 ms
+csr_mkl ave = 0.057890 ms
+csr_cusparse ave = 0.146482 ms
+csr_lightspmv ave = 1.181340 ms
+ell_naive ave = 0.170519 ms
+ell_tex ave = 0.170469 ms
+ell del
+csr del
+matrices/PR02R/PR02R.mtx
+coo_mkl ave = 28.771069 ms
+csr_mkl ave = 0.389380 ms
+csr_cusparse ave = 0.515280 ms
+csr_lightspmv ave = 1.706159 ms
+ell_naive ave = 0.550239 ms
+ell_tex ave = 0.509171 ms
+ell del
+csr del
+matrices/pwtk/pwtk.mtx
+coo_mkl ave = 15.836141 ms
+csr_mkl ave = 0.162919 ms
+csr_cusparse ave = 0.535421 ms
+csr_lightspmv ave = 1.841960 ms
+ell_naive ave = 0.849719 ms
+ell_tex ave = 0.842419 ms
+ell del
+csr del
+matrices/raefsky3/raefsky3.mtx
+coo_mkl ave = 5.245600 ms
+csr_mkl ave = 0.033550 ms
+csr_cusparse ave = 0.091791 ms
+csr_lightspmv ave = 1.096420 ms
+ell_naive ave = 0.108860 ms
+ell_tex ave = 0.108061 ms
+ell del
+csr del
+matrices/raefsky5/raefsky5.mtx
+coo_mkl ave = 0.497971 ms
+csr_mkl ave = 0.011902 ms
+csr_cusparse ave = 0.043230 ms
+csr_lightspmv ave = 1.321490 ms
+ell_naive ave = 0.047281 ms
+ell_tex ave = 0.059452 ms
+ell del
+csr del
+matrices/rma10/rma10.mtx
+coo_mkl ave = 7.886400 ms
+csr_mkl ave = 0.083818 ms
+csr_cusparse ave = 0.175660 ms
+csr_lightspmv ave = 1.268079 ms
+ell_naive ave = 0.196722 ms
+ell_tex ave = 0.199859 ms
+ell del
+csr del
+matrices/scircuit/scircuit.mtx
+coo_mkl ave = 1.921539 ms
+csr_mkl ave = 0.086870 ms
+csr_cusparse ave = 0.388689 ms
+csr_lightspmv ave = 1.451871 ms
+ell_naive ave = 1.080031 ms
+ell_tex ave = 0.952339 ms
+ell del
+csr del
+matrices/TSOPF_RS_b300_c3/TSOPF_RS_b300_c3.mtx
+coo_mkl ave = 17.532170 ms
+csr_mkl ave = 0.199561 ms
+csr_cusparse ave = 0.210209 ms
+csr_lightspmv ave = 1.260180 ms
+ell_naive ave = 0.231130 ms
+ell_tex ave = 0.235250 ms
+ell del
+csr del
+matrices/twotone/twotone.mtx
+coo_mkl ave = 3.212869 ms
+csr_mkl ave = 0.050430 ms
+csr_cusparse ave = 0.294709 ms
+csr_lightspmv ave = 1.507061 ms
+ell_naive ave = 0.603349 ms
+ell_tex ave = 0.542560 ms
+ell del
+csr del
