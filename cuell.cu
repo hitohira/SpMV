@@ -12,9 +12,7 @@ __global__ void EllKernelS(const int nrow,const int width,
 		for(int i = 0; i < width; i++){
 			int idx = col[nrow*i+r];
 			float v = val[nrow*i+r];
-			if(v != 0){
-				dot += v * b[idx];
-			}
+			dot += v * b[idx];
 		}
 		c[r] = dot;
 	}
